@@ -1,50 +1,62 @@
 import React, { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 
-export const BarChart = ({ data }) => {
-  const d3Container = useRef(null)
+export const Streamgraph = ({ data, width = 600, height = 400 }) => {
+  const svgRef = useRef(null)
 
   useEffect(() => {
-    if (data && d3Container.current) {
-      const svg = d3.select(d3Container.current)
-      svg.selectAll('*').remove() // Clear svg content before adding new elements
+    if (!data || data.length === 0) return
 
-      // Set up scales and axes
-      const margin = { top: 20, right: 20, bottom: 30, left: 40 }
-      const width = +svg.attr('width') - margin.left - margin.right
-      const height = +svg.attr('height') - margin.top - margin.bottom
-      const x = d3.scaleBand().rangeRound([0, width]).padding(0.1)
-      const y = d3.scaleLinear().rangeRound([height, 0])
+    // Select the SVG element and clear it
+    const svg = d3.select(svgRef.current)
+    svg.selectAll('*').remove() // Clear any previous SVG content
 
-      const g = svg
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`)
+    // Set up margins
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 },
+      chartWidth = width - margin.left - margin.right,
+      chartHeight = height - margin.top - margin.bottom
 
-      x.domain(data.map((d) => d.x))
-      y.domain([0, d3.max(data, (d) => d.y)])
+    // Create scales
+    const xScale = d3
+      .scaleLinear()
+      .domain(d3.extent(data, (d) => d.x))
+      .range([0, chartWidth])
 
-      // Add bars
-      g.selectAll('.bar')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('x', (d) => x(d.x))
-        .attr('y', (d) => y(d.y))
-        .attr('width', x.bandwidth())
-        .attr('height', (d) => height - y(d.y))
+    const yScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => d.y)])
+      .range([chartHeight, 0])
 
-      // Add axes
-      g.append('g')
-        .attr('class', 'axis axis--x')
-        .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(x))
+    // Append the SVG object to the body of the page
+    const chart = svg
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`)
 
-      g.append('g')
-        .attr('class', 'axis axis--y')
-        .call(d3.axisLeft(y).ticks(10, '%'))
-    }
-  }, [data]) // Redraw chart if data changes
+    // Generate the area for the Streamgraph
+    const area = d3
+      .area()
+      .x((d) => xScale(d.x))
+      .y0(chartHeight)
+      .y1((d) => yScale(d.y))
+      .curve(d3.curveBasis) // This makes the streamgraph shapes smooth
 
-  return <svg ref={d3Container} width={600} height={400} />
+    // Add the area to the chart
+    chart
+      .append('path')
+      .data([data]) // Bind data
+      .attr('class', 'streamgraph-area')
+      .attr('fill', 'steelblue')
+      .attr('d', area)
+
+    // Add the X Axis
+    chart
+      .append('g')
+      .attr('transform', `translate(0,${chartHeight})`)
+      .call(d3.axisBottom(xScale))
+
+    // Add the Y Axis
+    chart.append('g').call(d3.axisLeft(yScale))
+  }, [data, height, width]) // Redraw chart if data or dimensions change
+
+  return <svg ref={svgRef} width={width} height={height} />
 }

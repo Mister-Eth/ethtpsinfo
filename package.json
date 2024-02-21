@@ -19,6 +19,7 @@
     "buffer": "^6.0.3",
     "canvas": "^2.11.2",
     "d3": "^7.8.5",
+    "d3-stream": "^0.7.1",
     "fathom-client": "^3.5.0",
     "framer-motion": "^11.0.5",
     "hypelab-react": "^0.4.4",
