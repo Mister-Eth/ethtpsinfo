@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import './App.css'
 import { generateChainData } from './fetch.js'
-import { ChakraProvider, DarkMode } from '@chakra-ui/react'
+import {
+  Box,
+  Card,
+  CardBody,
+  CardFooter,
+  ChakraProvider,
+  Container,
+  DarkMode,
+  HStack
+} from '@chakra-ui/react'
 import Web3 from 'web3'
 import { Streamgraph } from './BarChart' // Make sure to import correctly
+import { AppHeader } from './components'
 
 const w = new Web3(
   new Web3.providers.WebsocketProvider(
@@ -33,9 +43,6 @@ function App() {
             (time) => now - time < inter
           )
           const tps = lastSecondTransactions.length / (inter / 1000)
-
-          // Update the TPS data, shifting the array to the left and adding the new value at the end
-          //   setTpsData((prevTpsData) => [...prevTpsData.slice(1), tps])
         })
       })
       .catch((err) => console.error(err))
@@ -57,6 +64,7 @@ function App() {
     <ChakraProvider>
       <DarkMode>
         <div className="App">
+          <AppHeader />
           <header className="App-header">
             Ethereum is doing {tpsData[tpsData.length - 1].toFixed(0)}{' '}
             transactions per second
@@ -64,7 +72,6 @@ function App() {
               data={tpsData.map((tps, index) => ({ x: index, y: tps }))}
             />
           </header>
-          <footer>Work in progress</footer>
         </div>
       </DarkMode>
     </ChakraProvider>
